@@ -1,0 +1,11 @@
+{
+  "api_key": "",
+  "model": "minimax",
+  "supported_models": {
+    "minimax": "MiniMax-M2.7",
+    "deepseek": "DeepSeek Chat",
+    "doubao": "豆包/火山引擎",
+    "openai": "GPT-4",
+    "claude": "Claude系列"
+  }
+}

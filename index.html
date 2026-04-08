@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Research Copilot - 用户研究辅助工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #4F46E5;
+            --primary-dark: #4338CA;
+            --secondary: #10B981;
+            --bg: #F9FAFB;
+            --card: #FFFFFF;
+            --border: #E5E7EB;
+            --text: #1F2937;
+            --text-light: #6B7280;
+            --error: #EF4444;
+            --warning: #F59E0B;
+            --info: #3B82F6;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 24px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo-icon {
+            width: 28px;
+            height: 28px;
+            background: var(--primary);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+        }
+
+        /* Main Layout */
+        .main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            background: var(--bg);
+            padding: 4px;
+            border-radius: 10px;
+            margin-bottom: 24px;
+            overflow-x: auto;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-light);
+            border: none;
+            background: transparent;
+            white-space: nowrap;
+        }
+
+        .tab.active {
+            background: var(--card);
+            color: var(--primary);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .tab:hover:not(.active) {
+            color: var(--text);
+        }
+
+        /* Card */
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Feature Info */
+        .feature-info {
+            background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%);
+            border: 1px solid #C7D2FE;
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .feature-info h3 {
+            font-size: 14px;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .feature-info p {
+            font-size: 13px;
+            color: var(--text-light);
+            margin-bottom: 8px;
+        }
+
+        .feature-info ul {
+            font-size: 12px;
+            color: var(--text);
+            margin-left: 16px;
+        }
+
+        .feature-info li {
+            margin-bottom: 4px;
+        }
+
+        .method-tag {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-right: 4px;
+        }
+
+        /* Form */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+            background: var(--card);
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 200px;
+            font-family: inherit;
+        }
+
+        .form-hint {
+            font-size: 12px;
+            color: var(--text-light);
+            margin-top: 4px;
+        }
+
+        /* Config */
+        .config-section {
+            background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+            border: 1px solid #FCD34D;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .config-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #92400E;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .config-models {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .model-tag {
+            background: white;
+            border: 1px solid #FCD34D;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            color: #92400E;
+        }
+
+        .config-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #FCD34D;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: monospace;
+            background: white;
+        }
+
+        .config-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-primary:disabled { background: #A5B4FC; cursor: not-allowed; }
+
+        .btn-secondary {
+            background: var(--bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover { background: var(--border); }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        /* Result */
+        .result-container {
+            background: var(--card);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            min-height: 400px;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .result-content {
+            padding: 20px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .result-placeholder {
+            text-align: center;
+            padding: 60px 40px;
+            color: var(--text-light);
+        }
+
+        .result-placeholder-icon {
+            font-size: 40px;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+
+        /* Loading */
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 60px 40px;
+        }
+
+        .spinner {
+            width: 36px;
+            height: 36px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            margin-top: 16px;
+            color: var(--text);
+            font-size: 14px;
+        }
+
+        .loading-hint {
+            margin-top: 8px;
+            color: var(--text-light);
+            font-size: 12px;
+        }
+
+        .loading-estimate {
+            margin-top: 4px;
+            color: var(--warning);
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        /* Markdown */
+        .markdown-content {
+            font-size: 14px;
+            line-height: 1.8;
+        }
+
+        .markdown-content h1 { font-size: 22px; font-weight: 700; margin: 24px 0 16px; color: var(--primary); }
+        .markdown-content h2 { font-size: 18px; font-weight: 600; margin: 20px 0 12px; }
+        .markdown-content h3 { font-size: 15px; font-weight: 600; margin: 16px 0 10px; }
+        .markdown-content p { margin-bottom: 10px; }
+        .markdown-content ul, .markdown-content ol { margin-left: 20px; margin-bottom: 10px; }
+        .markdown-content li { margin-bottom: 4px; }
+        .markdown-content table { width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 13px; }
+        .markdown-content th, .markdown-content td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; }
+        .markdown-content th { background: var(--bg); font-weight: 600; }
+        .markdown-content code { background: var(--bg); padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+        .markdown-content pre { background: #1F2937; color: #F3F4F6; padding: 16px; border-radius: 8px; overflow-x: auto; margin-bottom: 16px; }
+        .markdown-content pre code { background: transparent; padding: 0; color: inherit; }
+        .markdown-content blockquote { border-left: 4px solid var(--primary); padding-left: 16px; margin: 12px 0; color: var(--text-light); }
+        .markdown-content hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+        /* Error */
+        .error-container {
+            background: #FEE2E2;
+            border: 1px solid #FECACA;
+            border-radius: 8px;
+            padding: 16px;
+            color: #991B1B;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 12px 20px;
+            background: #1F2937;
+            color: white;
+            border-radius: 8px;
+            font-size: 14px;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.success { background: var(--secondary); }
+        .toast.error { background: var(--error); }
+
+        /* Grid layout */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .grid-2 { grid-template-columns: 1fr; }
+        }
+
+        /* Feature cards */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        @media (max-width: 1100px) {
+            .feature-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 600px) {
+            .feature-grid { grid-template-columns: 1fr; }
+        }
+
+        .feature-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .feature-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.1);
+        }
+
+        .feature-card.active {
+            border-color: var(--primary);
+            background: rgba(79, 70, 229, 0.05);
+        }
+
+        .feature-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .feature-name {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .feature-desc {
+            font-size: 12px;
+            color: var(--text-light);
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">UR</div>
+                <span>Research Copilot</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <!-- Feature Cards -->
+        <div class="feature-grid">
+            <div class="feature-card active" data-feature="plan">
+                <div class="feature-icon">📋</div>
+                <div class="feature-name">研究方案生成</div>
+                <div class="feature-desc">输入产品/场景，输出完整研究方案</div>
+            </div>
+            <div class="feature-card" data-feature="interview">
+                <div class="feature-icon">🎙️</div>
+                <div class="feature-name">访谈分析</div>
+                <div class="feature-desc">输入访谈记录，自动编码+主题归类</div>
+            </div>
+            <div class="feature-card" data-feature="questionnaire">
+                <div class="feature-icon">📊</div>
+                <div class="feature-name">问卷统计</div>
+                <div class="feature-desc">输入问卷数据，自动统计+交叉分析</div>
+            </div>
+            <div class="feature-card" data-feature="usability">
+                <div class="feature-icon">🔍</div>
+                <div class="feature-name">可用性分析</div>
+                <div class="feature-desc">输入测试观察，问题归类+严重度</div>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <!-- Left: Input -->
+            <div>
+                <div class="card">
+                    <h2 class="card-title" id="featureTitle">📋 研究方案生成</h2>
+
+                    <!-- Feature Info -->
+                    <div class="feature-info" id="featureInfo">
+                        <h3>📖 功能说明</h3>
+                        <p>输入产品信息，自动生成一套完整的用户研究方案。</p>
+                        <p><strong>输出内容：</strong></p>
+                        <ul>
+                            <li>研究目标（SMART原则）</li>
+                            <li>研究问题 + 假设</li>
+                            <li>访谈提纲（含追问技巧）</li>
+                            <li>问卷设计（含跳填逻辑）</li>
+                            <li>可用性测试任务卡</li>
+                            <li>用户旅程图框架</li>
+                            <li>Persona模板</li>
+                            <li>洞察分析框架</li>
+                        </ul>
+                        <p><strong>预计等待时间：</strong> 2-4 分钟</p>
+                    </div>
+
+                    <!-- API Config -->
+                    <div class="config-section">
+                        <div class="config-title">🔑 API Key 配置</div>
+                        <div class="config-models">
+                            <span class="model-tag">MiniMax</span>
+                            <span class="model-tag">DeepSeek</span>
+                            <span class="model-tag">豆包</span>
+                            <span class="model-tag">OpenAI</span>
+                            <span class="model-tag">Claude</span>
+                        </div>
+                        <input type="password" id="apiKey" class="config-input" placeholder="sk-...">
+                        <div class="config-actions">
+                            <button class="btn btn-primary btn-small" onclick="saveApiKey()">保存</button>
+                            <button class="btn btn-secondary btn-small" onclick="clearApiKey()">清除</button>
+                        </div>
+                    </div>
+
+                    <!-- Plan Form -->
+                    <form id="planForm">
+                        <div class="form-group">
+                            <label class="form-label">产品名称 *</label>
+                            <input type="text" id="productName" class="form-input" placeholder="例如：觉心、Keep、得到">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">产品类型 *</label>
+                            <select id="productType" class="form-select">
+                                <option value="consumer_app">消费级App（2C、高频、体验敏感）</option>
+                                <option value="enterprise_product">企业级产品（2B、流程复杂）</option>
+                                <option value="e_commerce">电商平台（转化导向）</option>
+                                <option value="tool_product">工具类产品（效率敏感）</option>
+                                <option value="platform">平台型产品（双边市场）</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">研究场景 *</label>
+                            <textarea id="sceneDescription" class="form-textarea" placeholder="描述你想研究的问题或场景"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">目标用户</label>
+                            <input type="text" id="targetUsers" class="form-input" placeholder="例如：22-35岁城市白领">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">研究阶段</label>
+                            <select id="researchPhase" class="form-select">
+                                <option value="exploratory">探索期 - 理解用户、发现问题</option>
+                                <option value="definitional">定义期 - 聚焦问题、形成假设</option>
+                                <option value="validational">验证期 - 测试方案、评估效果</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" id="generateBtn" class="btn btn-primary" style="width:100%">
+                            ⚡ 生成研究方案
+                        </button>
+                    </form>
+
+                    <!-- Interview Form -->
+                    <form id="interviewForm" style="display:none">
+                        <div class="form-group">
+                            <label class="form-label">访谈记录 *</label>
+                            <textarea id="interviewText" class="form-textarea" placeholder="粘贴访谈记录文本..."></textarea>
+                            <div class="form-hint">支持多段访谈，用---分隔每段</div>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width:100%">
+                            ⚡ 分析访谈
+                        </button>
+                    </form>
+
+                    <!-- Questionnaire Form -->
+                    <form id="questionnaireForm" style="display:none">
+                        <div class="form-group">
+                            <label class="form-label">问卷数据 *</label>
+                            <textarea id="questionnaireData" class="form-textarea" placeholder="粘贴问卷数据..."></textarea>
+                            <div class="form-hint">支持表格文本、JSON或CSV格式</div>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width:100%">
+                            ⚡ 分析问卷
+                        </button>
+                    </form>
+
+                    <!-- Usability Form -->
+                    <form id="usabilityForm" style="display:none">
+                        <div class="form-group">
+                            <label class="form-label">可用性测试观察记录 *</label>
+                            <textarea id="usabilityData" class="form-textarea" placeholder="粘贴可用性测试观察记录..."></textarea>
+                            <div class="form-hint">包含任务描述、完成情况、用户行为描述</div>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width:100%">
+                            ⚡ 分析可用性
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Right: Output -->
+            <div>
+                <div class="result-container">
+                    <div class="result-header">
+                        <span id="outputTitle">输出结果</span>
+                        <div style="display:flex;gap:8px">
+                            <button class="btn btn-secondary btn-small" onclick="copyContent()">📋 复制</button>
+                            <button class="btn btn-secondary btn-small" onclick="downloadMarkdown()">📥 下载</button>
+                        </div>
+                    </div>
+                    <div id="resultContent" class="result-content">
+                        <div class="result-placeholder">
+                            <div class="result-placeholder-icon">🔍</div>
+                            <div>选择功能，输入数据，点击执行</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        // Feature info templates
+        const featureInfo = {
+            plan: {
+                title: '📖 功能说明',
+                desc: '输入产品信息，自动生成一套完整的用户研究方案。',
+                outputs: ['研究目标（SMART原则）', '研究问题 + 假设', '访谈提纲（含追问技巧）', '问卷设计（含跳填逻辑）', '可用性测试任务卡', '用户旅程图框架', 'Persona模板', '洞察分析框架'],
+                method: 'AI自动生成',
+                waitTime: '2-4 分钟'
+            },
+            interview: {
+                title: '🎙️ 访谈分析（Thematic Analysis）',
+                desc: '对访谈记录进行主题归类分析，基于Braun & Clarke (2006) 六步编码法。',
+                outputs: ['初始编码表', '高阶类别整合', '主题归类', '主题关系图', '关键洞察'],
+                method: 'Thematic Analysis (Braun & Clarke, 2006)',
+                waitTime: '1-3 分钟'
+            },
+            questionnaire: {
+                title: '📊 问卷统计分析',
+                desc: '对问卷数据进行统计分析，包括描述性统计、NPS计算和交叉分析。',
+                outputs: ['频次分布表', 'NPS净推荐值', '交叉分析', '问题优先级矩阵', '关键发现'],
+                method: '描述统计 + 交叉分析 + NPS',
+                waitTime: '1-2 分钟'
+            },
+            usability: {
+                title: '🔍 可用性分析（Nielsen Norman）',
+                desc: '对可用性测试观察记录进行问题归类和严重度评级，基于Nielsen Norman可用性评估框架。',
+                outputs: ['问题清单（P0-P3严重度）', '修复优先级', '效率评分', '建议输出'],
+                method: 'Nielsen Norman可用性评估',
+                waitTime: '1-2 分钟'
+            }
+        };
+
+        // State
+        let currentFeature = 'plan';
+        let currentResult = null;
+
+        // Feature switching
+        document.querySelectorAll('.feature-card').forEach(card => {
+            card.addEventListener('click', () => {
+                document.querySelectorAll('.feature-card').forEach(c => c.classList.remove('active'));
+                card.classList.add('active');
+                currentFeature = card.dataset.feature;
+                updateUI();
+            });
+        });
+
+        function updateUI() {
+            // Hide all forms
+            document.getElementById('planForm').style.display = 'none';
+            document.getElementById('interviewForm').style.display = 'none';
+            document.getElementById('questionnaireForm').style.display = 'none';
+            document.getElementById('usabilityForm').style.display = 'none';
+
+            // Update feature info
+            const info = featureInfo[currentFeature];
+            document.getElementById('featureInfo').innerHTML = `
+                <h3>${info.title}</h3>
+                <p>${info.desc}</p>
+                <p><strong>基于方法论：</strong><span class="method-tag">${info.method}</span></p>
+                <p><strong>输出内容：</strong></p>
+                <ul>
+                    ${info.outputs.map(o => `<li>${o}</li>`).join('')}
+                </ul>
+                <p><strong>预计等待时间：</strong> <span style="color: var(--warning)">${info.waitTime}</span></p>
+            `;
+
+            // Show selected form
+            const titles = {
+                plan: '📋 研究方案生成',
+                interview: '🎙️ 访谈分析',
+                questionnaire: '📊 问卷统计',
+                usability: '🔍 可用性分析'
+            };
+            document.getElementById('featureTitle').textContent = titles[currentFeature];
+
+            if (currentFeature === 'plan') {
+                document.getElementById('planForm').style.display = 'block';
+            } else if (currentFeature === 'interview') {
+                document.getElementById('interviewForm').style.display = 'block';
+            } else if (currentFeature === 'questionnaire') {
+                document.getElementById('questionnaireForm').style.display = 'block';
+            } else if (currentFeature === 'usability') {
+                document.getElementById('usabilityForm').style.display = 'block';
+            }
+        }
+
+        // Init
+        updateUI();
+
+        // API Key
+        function saveApiKey() {
+            const key = document.getElementById('apiKey').value.trim();
+            if (!key || !key.startsWith('sk-')) {
+                showToast('请输入正确的API Key', 'error');
+                return;
+            }
+            localStorage.setItem('openai_api_key', key);
+            fetch('/api/configure', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ api_key: key, model: 'minimax' })
+            }).then(() => {
+                showToast('API Key已配置', 'success');
+            }).catch(err => {
+                showToast('配置失败: ' + err.message, 'error');
+            });
+        }
+
+        function clearApiKey() {
+            localStorage.removeItem('openai_api_key');
+            document.getElementById('apiKey').value = '';
+            showToast('API Key已清除', 'success');
+        }
+
+        // Submit handlers
+        document.getElementById('planForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                product_name: document.getElementById('productName').value,
+                product_type: document.getElementById('productType').value,
+                scene_description: document.getElementById('sceneDescription').value,
+                target_users: document.getElementById('targetUsers').value || '通用用户群体',
+                research_phase: document.getElementById('researchPhase').value
+            };
+            await submitRequest('/api/generate', data, '生成研究方案', '2-4分钟');
+        });
+
+        document.getElementById('interviewForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = { interview_text: document.getElementById('interviewText').value };
+            await submitRequest('/api/analyze/interview', data, '分析访谈', '1-3分钟');
+        });
+
+        document.getElementById('questionnaireForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = { questionnaire_data: document.getElementById('questionnaireData').value };
+            await submitRequest('/api/analyze/questionnaire', data, '分析问卷', '1-2分钟');
+        });
+
+        document.getElementById('usabilityForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = { usability_data: document.getElementById('usabilityData').value };
+            await submitRequest('/api/analyze/usability', data, '分析可用性', '1-2分钟');
+        });
+
+        async function submitRequest(endpoint, data, actionName, estimate) {
+            if (!localStorage.getItem('openai_api_key')) {
+                showToast('请先配置API Key', 'error');
+                return;
+            }
+
+            document.getElementById('resultContent').innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <div class="loading-text">AI正在${actionName}...</div>
+                    <div class="loading-hint">基于 ${featureInfo[currentFeature].method}</div>
+                    <div class="loading-estimate">预计等待: ${estimate}</div>
+                </div>
+            `;
+
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) throw new Error(await response.text());
+
+                const result = await response.json();
+                if (result.status === 'success') {
+                    currentResult = result.data.content;
+                    renderResult(currentResult);
+                    showToast(actionName + '完成', 'success');
+                } else {
+                    throw new Error(result.message || '未知错误');
+                }
+            } catch (error) {
+                document.getElementById('resultContent').innerHTML = `
+                    <div class="error-container">
+                        <strong>错误</strong>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+                showToast(actionName + '失败', 'error');
+            }
+        }
+
+        function renderResult(content) {
+            document.getElementById('resultContent').innerHTML = `
+                <div class="markdown-content">${markdownToHtml(content)}</div>
+            `;
+        }
+
+        function markdownToHtml(md) {
+            let html = md;
+            html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+            html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+            html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+            html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+            html = html.replace(/```[\s\S]*?```/g, (m) => '<pre><code>' + m.slice(3,-3).replace(/```\w*\n?/g,'') + '</code></pre>');
+            html = html.replace(/`(.+?)`/g, '<code>$1</code>');
+            html = html.replace(/^\- (.+)$/gm, '<li>$1</li>');
+            html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+            html = html.replace(/\|(.+)\|\n\|[\-\s|]+\|\n((?:\|.+\|\n?)+)/g, (match, header, body) => {
+                const headers = header.split('|').filter(h => h.trim());
+                const rows = body.trim().split('\n').map(row => row.split('|').filter(c => c.trim()));
+                let table = '<table><thead><tr>';
+                headers.forEach(h => table += `<th>${h.trim()}</th>`);
+                table += '</tr></thead><tbody>';
+                rows.forEach(row => {
+                    table += '<tr>';
+                    row.forEach(cell => table += `<td>${cell.trim()}</td>`);
+                    table += '</tr>';
+                });
+                return table + '</tbody></table>';
+            });
+            html = html.replace(/\n\n/g, '</p><p>');
+            html = '<p>' + html + '</p>';
+            html = html.replace(/<p><\/p>/g, '');
+            return html;
+        }
+
+        function copyContent() {
+            if (!currentResult) return;
+            navigator.clipboard.writeText(currentResult).then(() => {
+                showToast('已复制', 'success');
+            });
+        }
+
+        function downloadMarkdown() {
+            if (!currentResult) return;
+            const blob = new Blob([currentResult], { type: 'text/markdown' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `research-${Date.now()}.md`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('下载成功', 'success');
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type} show`;
+            setTimeout(() => toast.className = 'toast', 3000);
+        }
+    </script>
+</body>
+</html>
